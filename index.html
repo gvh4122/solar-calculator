@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utility vs Solar Cost Comparison</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        /* Input Section */
+        .input-section {
+            background: #f7fafc;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        .input-group input {
+            padding: 12px 15px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Summary Cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            padding: 30px;
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-utility {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .card-solar {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .card-savings {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .card-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .card-subtext {
+            font-size: 0.85em;
+            opacity: 0.85;
+        }
+
+        /* Chart Section */
+        .chart-section {
+            background: #f7fafc;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .chart-section h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+        }
+
+        /* Table Section */
+        .table-section {
+            background: #f7fafc;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .table-section h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        th:first-child {
+            text-align: center;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: right;
+            color: #2d3748;
+        }
+
+        td:first-child {
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        tr:hover {
+            background: #f7fafc;
+        }
+
+        .utility-cost {
+            color: #f5576c;
+            font-weight: 600;
+        }
+
+        .solar-cost {
+            color: #00f2fe;
+            font-weight: 600;
+        }
+
+        .savings {
+            color: #43e97b;
+            font-weight: 600;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+            }
+
+            .input-section {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Utility vs Solar Cost Comparison</h1>
+        <p class="subtitle">Interactive 25-Year Financial Analysis</p>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="utilityStart">Utility Starting Monthly Cost ($)</label>
+                    <input type="number" id="utilityStart" value="250" min="0" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="solarStart">Solar Starting Monthly Cost ($)</label>
+                    <input type="number" id="solarStart" value="190" min="0" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="utilityIncrease">Utility Annual Increase (%)</label>
+                    <input type="number" id="utilityIncrease" value="9" min="0" max="100" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label for="solarIncrease">Solar Annual Increase (%)</label>
+                    <input type="number" id="solarIncrease" value="2.99" min="0" max="100" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label for="years">Analysis Period (Years)</label>
+                    <input type="number" id="years" value="25" min="1" max="50" step="1">
+                </div>
+                <div class="input-group">
+                    <label for="offset">Utility Offset by Solar (%)</label>
+                    <input type="number" id="offset" value="100" min="0" max="100" step="1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="card card-utility">
+                <div class="card-label">Total Utility Cost (No Solar)</div>
+                <div class="card-value" id="totalUtility">$0</div>
+                <div class="card-subtext">Over <span id="yearsUtility">25</span> years</div>
+            </div>
+            <div class="card card-solar">
+                <div class="card-label">Total Cost with Solar</div>
+                <div class="card-value" id="totalWithSolar">$0</div>
+                <div class="card-subtext">Remaining utility + solar payment</div>
+            </div>
+            <div class="card card-savings">
+                <div class="card-label">Total Savings</div>
+                <div class="card-value" id="totalSavings">$0</div>
+                <div class="card-subtext">By choosing solar</div>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-section">
+            <h2>📊 Annual Cost Comparison</h2>
+            <div class="chart-container">
+                <canvas id="costChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-section">
+            <h2>📋 Detailed Year-by-Year Breakdown</h2>
+            <div class="table-container">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Full Utility (Monthly)</th>
+                            <th>Remaining Utility (Monthly)</th>
+                            <th>Solar Payment (Monthly)</th>
+                            <th>Combined (Monthly)</th>
+                            <th>Full Utility (Annual)</th>
+                            <th>Combined Cost (Annual)</th>
+                            <th>Annual Savings</th>
+                            <th>Cumulative Savings</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global chart instance
+        let costChart = null;
+
+        // Format currency
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        // Calculate all data
+        function calculateData() {
+            const utilityStart = parseFloat(document.getElementById('utilityStart').value);
+            const solarStart = parseFloat(document.getElementById('solarStart').value);
+            const utilityIncrease = parseFloat(document.getElementById('utilityIncrease').value) / 100;
+            const solarIncrease = parseFloat(document.getElementById('solarIncrease').value) / 100;
+            const years = parseInt(document.getElementById('years').value);
+            const offset = parseFloat(document.getElementById('offset').value) / 100;
+
+            const data = [];
+            let cumulativeSavings = 0;
+            let totalUtilityCost = 0;
+            let totalCombinedCost = 0;
+
+            for (let year = 1; year <= years; year++) {
+                // Full utility cost (what it would be without solar)
+                const fullUtilityMonthly = utilityStart * Math.pow(1 + utilityIncrease, year - 1);
+
+                // Remaining utility cost after offset (this portion still uses utility)
+                const remainingUtilityMonthly = fullUtilityMonthly * (1 - offset);
+
+                // Solar payment
+                const solarMonthly = solarStart * Math.pow(1 + solarIncrease, year - 1);
+
+                // Combined monthly cost (remaining utility + solar)
+                const combinedMonthly = remainingUtilityMonthly + solarMonthly;
+
+                // Annual calculations
+                const fullUtilityAnnual = fullUtilityMonthly * 12;
+                const remainingUtilityAnnual = remainingUtilityMonthly * 12;
+                const solarAnnual = solarMonthly * 12;
+                const combinedAnnual = combinedMonthly * 12;
+
+                // Savings
+                const annualSavings = fullUtilityAnnual - combinedAnnual;
+                cumulativeSavings += annualSavings;
+
+                // Totals
+                totalUtilityCost += fullUtilityAnnual;
+                totalCombinedCost += combinedAnnual;
+
+                data.push({
+                    year,
+                    fullUtilityMonthly,
+                    remainingUtilityMonthly,
+                    solarMonthly,
+                    combinedMonthly,
+                    fullUtilityAnnual,
+                    remainingUtilityAnnual,
+                    solarAnnual,
+                    combinedAnnual,
+                    annualSavings,
+                    cumulativeSavings
+                });
+            }
+
+            return {
+                data,
+                totalUtilityCost,
+                totalCombinedCost,
+                totalSavings: totalUtilityCost - totalCombinedCost,
+                years
+            };
+        }
+
+        // Update summary cards
+        function updateSummaryCards(results) {
+            document.getElementById('totalUtility').textContent = formatCurrency(results.totalUtilityCost);
+            document.getElementById('totalWithSolar').textContent = formatCurrency(results.totalCombinedCost);
+            document.getElementById('totalSavings').textContent = formatCurrency(results.totalSavings);
+            document.getElementById('yearsUtility').textContent = results.years;
+        }
+
+        // Update chart
+        function updateChart(results) {
+            const ctx = document.getElementById('costChart').getContext('2d');
+
+            const labels = results.data.map(d => `Year ${d.year}`);
+            const fullUtilityData = results.data.map(d => d.fullUtilityAnnual);
+            const combinedData = results.data.map(d => d.combinedAnnual);
+
+            if (costChart) {
+                costChart.destroy();
+            }
+
+            costChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Full Utility Cost (No Solar)',
+                            data: fullUtilityData,
+                            borderColor: '#f5576c',
+                            backgroundColor: 'rgba(245, 87, 108, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'With Solar (Combined)',
+                            data: combinedData,
+                            borderColor: '#00f2fe',
+                            backgroundColor: 'rgba(0, 242, 254, 0.1)',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: {
+                                size: 14
+                            },
+                            bodyFont: {
+                                size: 13
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                },
+                                font: {
+                                    size: 12
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 11
+                                },
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update table
+        function updateTable(results) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            results.data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.year}</td>
+                    <td class="utility-cost">${formatCurrency(row.fullUtilityMonthly)}</td>
+                    <td class="utility-cost">${formatCurrency(row.remainingUtilityMonthly)}</td>
+                    <td class="solar-cost">${formatCurrency(row.solarMonthly)}</td>
+                    <td class="solar-cost">${formatCurrency(row.combinedMonthly)}</td>
+                    <td class="utility-cost">${formatCurrency(row.fullUtilityAnnual)}</td>
+                    <td class="solar-cost">${formatCurrency(row.combinedAnnual)}</td>
+                    <td class="savings">${formatCurrency(row.annualSavings)}</td>
+                    <td class="savings">${formatCurrency(row.cumulativeSavings)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Update all
+        function updateAll() {
+            const results = calculateData();
+            updateSummaryCards(results);
+            updateChart(results);
+            updateTable(results);
+        }
+
+        // Add event listeners to all inputs
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', updateAll);
+        });
+
+        // Initial calculation
+        updateAll();
+    </script>
+</body>
+</html>
